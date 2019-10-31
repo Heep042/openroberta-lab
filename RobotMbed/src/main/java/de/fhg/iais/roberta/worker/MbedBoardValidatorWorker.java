@@ -8,12 +8,7 @@ import de.fhg.iais.roberta.visitor.validate.MbedBoardValidatorVisitor;
 public class MbedBoardValidatorWorker extends AbstractValidatorWorker {
 
     @Override
-    protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new MbedBoardValidatorVisitor(builder, project.getConfigurationAst());
-    }
-
-    @Override
-    protected String getBeanName() {
-        return "ProgramValidator";
     }
 }

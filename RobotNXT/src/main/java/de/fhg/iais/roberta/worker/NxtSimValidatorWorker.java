@@ -8,12 +8,7 @@ import de.fhg.iais.roberta.visitor.validate.NxtSimValidatorVisitor;
 public class NxtSimValidatorWorker extends AbstractValidatorWorker {
 
     @Override
-    protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new NxtSimValidatorVisitor(builder, project.getConfigurationAst());
-    }
-
-    @Override
-    protected String getBeanName() {
-        return "SimValidator";
     }
 }

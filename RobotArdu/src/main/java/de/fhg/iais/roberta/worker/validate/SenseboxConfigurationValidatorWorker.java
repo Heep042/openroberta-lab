@@ -14,7 +14,7 @@ public class SenseboxConfigurationValidatorWorker extends ArduinoConfigurationVa
     }
 
     @Override
-    protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new SenseboxBrickValidatorVisitor(builder, project.getConfigurationAst(), project.getSSID(), project.getPassword());
     }
 }

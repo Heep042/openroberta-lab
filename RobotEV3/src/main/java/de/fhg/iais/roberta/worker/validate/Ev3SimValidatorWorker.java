@@ -9,12 +9,7 @@ import de.fhg.iais.roberta.worker.AbstractValidatorWorker;
 public class Ev3SimValidatorWorker extends AbstractValidatorWorker {
 
     @Override
-    protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new Ev3SimValidatorVisitor(builder, project.getConfigurationAst());
-    }
-
-    @Override
-    protected String getBeanName() {
-        return "SimValidator";
     }
 }

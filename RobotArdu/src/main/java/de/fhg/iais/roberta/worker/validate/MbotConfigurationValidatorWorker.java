@@ -9,12 +9,7 @@ import de.fhg.iais.roberta.worker.AbstractValidatorWorker;
 public class MbotConfigurationValidatorWorker extends AbstractValidatorWorker {
     
     @Override
-    protected AbstractBrickValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractBrickValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new MbotBrickValidatorVisitor(builder, project.getConfigurationAst());
-    }
-
-    @Override
-    protected String getBeanName() {
-        return "ProgramValidator";
     }
 }

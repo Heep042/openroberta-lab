@@ -8,12 +8,7 @@ import de.fhg.iais.roberta.visitor.validate.CalliopeSimValidatorVisitor;
 public class CalliopeSimValidatorWorker extends AbstractValidatorWorker {
 
     @Override
-    protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new CalliopeSimValidatorVisitor(builder, project.getConfigurationAst());
-    }
-
-    @Override
-    protected String getBeanName() {
-        return "SimValidator";
     }
 }

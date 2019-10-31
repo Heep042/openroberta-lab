@@ -16,6 +16,8 @@ import javax.xml.bind.Marshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.fhg.iais.roberta.bean.CompilerSetupBean;
+import de.fhg.iais.roberta.bean.IProjectBean;
 import de.fhg.iais.roberta.blockly.generated.Block;
 import de.fhg.iais.roberta.blockly.generated.BlockSet;
 import de.fhg.iais.roberta.blockly.generated.Instance;
@@ -53,7 +55,7 @@ public final class Project {
     private ProgramAst<Void> program = null;
     private ConfigurationAst configuration = null;
 
-    private final Map<String, Object> workerResults = new HashMap<>();
+    private final Map<Class<? extends IProjectBean>, IProjectBean> workerResults = new HashMap<>();
 
     private StringBuilder sourceCodeBuilder = new StringBuilder();
     private final StringBuilder indentationBuilder = new StringBuilder();
@@ -129,12 +131,30 @@ public final class Project {
         return this.configuration;
     }
 
-    public Object getWorkerResult(String beanName) {
-        return this.workerResults.get(beanName);
+    public <T extends IProjectBean> T getWorkerResult(Class<T> beanClass) {
+        IProjectBean bean = this.workerResults.get(beanClass);
+        Assert.notNull(bean, "No worker result bean with " + beanClass.getSimpleName() + " available!");
+        return beanClass.cast(bean);
     }
 
-    public void addWorkerResult(String beanName, Object bean) {
-        this.workerResults.put(beanName, bean);
+    public <T extends IProjectBean> T optWorkerResult(Class<T> beanClass) {
+        IProjectBean bean = this.workerResults.get(beanClass);
+        return beanClass.cast(bean);
+    }
+
+    public void addWorkerResult(IProjectBean bean) {
+        IProjectBean existingBean = this.workerResults.get(bean.getClass());
+        Assert.isNull(existingBean, "A worker result bean with " + bean.getClass().getSimpleName() + " already exists!");
+        this.workerResults.put(bean.getClass(), bean);
+    }
+
+    public void appendWorkerResult(IProjectBean bean) {
+        IProjectBean existingBean = this.workerResults.get(bean.getClass());
+        if (existingBean == null) {
+            this.addWorkerResult(bean);
+        } else {
+            existingBean.merge(bean);
+        }
     }
 
     public StringBuilder getSourceCode() {

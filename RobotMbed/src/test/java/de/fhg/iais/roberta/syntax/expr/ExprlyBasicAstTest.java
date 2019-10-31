@@ -413,10 +413,10 @@ public class ExprlyBasicAstTest extends AstTest {
         addInList.add(expr);
         ArrayList<ArrayList<Phrase<Void>>> addInListInList = new ArrayList<>();
         addInListInList.add(addInList);
-        CalliopeCppVisitor cppVisitor = new CalliopeCppVisitor(usedHardwareBean, codeGeneratorSetupBeanCpp, null, addInListInList);
+        CalliopeCppVisitor cppVisitor = new CalliopeCppVisitor(addInListInList, null, usedHardwareBean, codeGeneratorSetupBeanCpp);
         cppVisitor.visitExprStmt(ExprStmt.make(expr));
         LOG.info("generated C++ code: " + cppVisitor.getSb().toString());
-        MicrobitPythonVisitor pythonVisitor = new MicrobitPythonVisitor(usedHardwareBean, codeGeneratorSetupBeanPy, null, addInListInList);
+        MicrobitPythonVisitor pythonVisitor = new MicrobitPythonVisitor(addInListInList, usedHardwareBean, codeGeneratorSetupBeanPy);
         pythonVisitor.visitExprStmt(ExprStmt.make(expr));
         LOG.info("generated Python code: " + pythonVisitor.getSb().toString());
     }

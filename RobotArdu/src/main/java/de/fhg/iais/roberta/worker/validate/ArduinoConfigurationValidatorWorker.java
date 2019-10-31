@@ -46,13 +46,8 @@ public class ArduinoConfigurationValidatorWorker extends AbstractValidatorWorker
     }
 
     @Override
-    protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new ArduinoBrickValidatorVisitor(builder, project.getConfigurationAst());
-    }
-
-    @Override
-    protected String getBeanName() {
-        return "ProgramValidator";
     }
 
     private void checkConfigurationBlock(ConfigurationComponent configurationComponent) {

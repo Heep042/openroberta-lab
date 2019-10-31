@@ -29,13 +29,8 @@ public class CheckVisitorTest extends AstTest {
 
     private class TestProgramCheckWorker extends AbstractValidatorWorker {
         @Override
-        protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+        protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
             return new TestProgramCheckVisitor(builder, project.getConfigurationAst());
-        }
-
-        @Override
-        protected String getBeanName() {
-            return "ProgramValidator";
         }
     }
 

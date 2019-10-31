@@ -8,12 +8,7 @@ import de.fhg.iais.roberta.visitor.validate.WedoBrickValidatorVisitor;
 public class WedoBrickValidatorWorker extends AbstractValidatorWorker {
 
     @Override
-    protected AbstractProgramValidatorVisitor getVisitor(UsedHardwareBean.Builder builder, Project project) {
+    protected AbstractProgramValidatorVisitor getVisitor(Project project, UsedHardwareBean.Builder builder) {
         return new WedoBrickValidatorVisitor(builder, project.getConfigurationAst());
-    }
-
-    @Override
-    protected String getBeanName() {
-        return "ProgramValidator";
     }
 }
