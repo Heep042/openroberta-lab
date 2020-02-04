@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.fhg.iais.roberta.bean.CodeGeneratorSetupBean;
 import de.fhg.iais.roberta.bean.IProjectBean;
 import de.fhg.iais.roberta.bean.UsedHardwareBean;
 import de.fhg.iais.roberta.components.ConfigurationAst;
@@ -78,6 +79,7 @@ import de.fhg.iais.roberta.util.dbc.Assert;
 import de.fhg.iais.roberta.util.dbc.DbcException;
 import de.fhg.iais.roberta.util.dbc.VisitorException;
 import de.fhg.iais.roberta.visitor.IVisitor;
+import de.fhg.iais.roberta.visitor.collect.NxtMethods;
 import de.fhg.iais.roberta.visitor.hardware.INxtVisitor;
 import de.fhg.iais.roberta.visitor.lang.codegen.prog.AbstractCppVisitor;
 
@@ -166,10 +168,10 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 this.sb.append("PI");
                 break;
             case E:
-                this.sb.append("E");
+                this.sb.append("2.718281828459045");
                 break;
             case GOLDEN_RATIO:
-                this.sb.append("GOLDEN_RATIO");
+                this.sb.append("1.61803398875");
                 break;
             case SQRT2:
                 this.sb.append("sqrt(2)");
@@ -179,7 +181,7 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 break;
             // IEEE 754 floating point representation
             case INFINITY:
-                this.sb.append("INFINITY"); // TODO
+                this.sb.append("0x7f800000");
                 break;
             default:
                 break;
@@ -340,6 +342,19 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
 
     @Override
     public Void visitShowTextAction(ShowTextAction<Void> showTextAction) {
+        this.sb.append(getMethodForShowText(showTextAction));
+        this.sb.append("(");
+        showTextAction.getX().accept(this);
+        this.sb.append(", (MAXLINES - ");
+        showTextAction.getY().accept(this);
+
+        this.sb.append(") * MAXLINES, ");
+        showTextAction.getMsg().accept(this);
+        this.sb.append(");");
+        return null;
+    }
+
+    public static String getMethodForShowText(ShowTextAction<Void> showTextAction) {
         String methodName;
         switch ( showTextAction.getMsg().getVarType() ) {
             case ARRAY_STRING:
@@ -354,13 +369,13 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 methodName = "ColorOut";
                 break;
             case NOTHING:
-                if ( showTextAction.getMsg().getProperty().getBlockType().toString().contains("isPressed")
-                    || showTextAction.getMsg().getProperty().getBlockType().toString().contains("logic_ternary") ) {
+                if ( showTextAction.getMsg().getProperty().getBlockType().contains("isPressed")
+                    || showTextAction.getMsg().getProperty().getBlockType().contains("logic_ternary") ) {
                     methodName = "BoolOut";
-                } else if ( showTextAction.getMsg().getProperty().getBlockType().toString().contains("colour") ) {
+                } else if ( showTextAction.getMsg().getProperty().getBlockType().contains("colour") ) {
                     methodName = "ColorOut";
-                } else if ( showTextAction.getMsg().getProperty().getBlockType().toString().contains("robSensors")
-                    || showTextAction.getMsg().getProperty().getBlockType().toString().contains("robActions")
+                } else if ( showTextAction.getMsg().getProperty().getBlockType().contains("robSensors")
+                    || showTextAction.getMsg().getProperty().getBlockType().contains("robActions")
                     || showTextAction.getMsg().toString().contains("POWER") ) {
                     methodName = "NumOut";
                 } else {
@@ -404,15 +419,7 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 methodName = "NumOut";
                 break;
         }
-        this.sb.append(methodName + "(");
-        showTextAction.getX().accept(this);
-        this.sb.append(", (MAXLINES - ");
-        showTextAction.getY().accept(this);
-
-        this.sb.append(") * MAXLINES, ");
-        showTextAction.getMsg().accept(this);
-        this.sb.append(");");
-        return null;
+        return methodName;
     }
 
     @Override
@@ -503,9 +510,9 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
             String sign = reverse ? "-" : "";
             String methodNamePart = reverse ? "OnRev" : "OnFwd";
             if ( isDuration ) {
-                this.sb.append("RotateMotor(OUT_" + userDefinedPort + ", " + sign + "SpeedTest(");
+                this.sb.append("RotateMotor(OUT_" + userDefinedPort + ", " + sign + "MIN(MAX(");
                 motorOnAction.getParam().getSpeed().accept(this);
-                this.sb.append(")");
+                this.sb.append(", -100), 100)");
                 if ( motorOnAction.getDurationMode() == MotorMoveMode.ROTATIONS ) {
                     this.sb.append(", 360 * ");
                 } else {
@@ -514,13 +521,13 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 motorOnAction.getParam().getDuration().getValue().accept(this);
             } else {
                 if ( isRegulatedDrive ) {
-                    this.sb.append(methodNamePart + "RegEx(OUT_" + userDefinedPort + ", SpeedTest(");
+                    this.sb.append(methodNamePart + "RegEx(OUT_" + userDefinedPort + ", MIN(MAX(");
                     motorOnAction.getParam().getSpeed().accept(this);
-                    this.sb.append("), OUT_REGMODE_SPEED, RESET_NONE");
+                    this.sb.append(", -100), 100), OUT_REGMODE_SPEED, RESET_NONE");
                 } else {
-                    this.sb.append(methodNamePart + "(OUT_" + userDefinedPort + ", SpeedTest(");
+                    this.sb.append(methodNamePart + "(OUT_" + userDefinedPort + ", MIN(MAX(");
                     motorOnAction.getParam().getSpeed().accept(this);
-                    this.sb.append(")");
+                    this.sb.append(", -100), 100)");
                 }
             }
             this.sb.append(");");
@@ -536,9 +543,9 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
             String sign = reverse ? "-" : "";
             final String methodName = "OnFwdRegEx";
             //final boolean isRegulated = brickConfiguration.isMotorRegulated(motorSetPowerAction.getPort());
-            this.sb.append(methodName + "(OUT_" + userDefinedPort + ", " + sign + "SpeedTest(");
+            this.sb.append(methodName + "(OUT_" + userDefinedPort + ", " + sign + "MIN(MAX(");
             motorSetPowerAction.getPower().accept(this);
-            this.sb.append("), OUT_REGMODE_SPEED, RESET_NONE");
+            this.sb.append(", -100), 100), OUT_REGMODE_SPEED, RESET_NONE");
             this.sb.append(");");
         }
         return null;
@@ -590,9 +597,9 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
         } else {
             this.sb.append(", ");
         }
-        this.sb.append("SpeedTest(");
+        this.sb.append("MIN(MAX(");
         driveAction.getParam().getSpeed().accept(this);
-        this.sb.append(")").append(", ");
+        this.sb.append(", -100), 100)").append(", ");
         if ( isDuration ) {
             this.sb.append("(");
             driveAction.getParam().getDuration().getValue().accept(this);
@@ -635,9 +642,9 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
             turnpct *= -1;
         }
         String sortedPort = createSortedPorts(leftMotorPort, rightMotorPort);
-        this.sb.append(sortedPort).append(", SpeedTest(");
+        this.sb.append(sortedPort).append(", MIN(MAX(");
         turnAction.getParam().getSpeed().accept(this);
-        this.sb.append(")");
+        this.sb.append(", -100), 100)");
         if ( turnAction.getDirection() == TurnDirection.LEFT ) {
             turnpct *= -1;
         }
@@ -671,11 +678,11 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
 
         this.sb.append(methodName).append("(OUT_").append(leftMotorPort);
         this.sb.append(", OUT_").append(rightMotorPort);
-        this.sb.append(", SpeedTest(");
+        this.sb.append(", MIN(MAX(");
         curveAction.getParamLeft().getSpeed().accept(this);
-        this.sb.append("), SpeedTest(");
+        this.sb.append(", -100), 100), MIN(MAX(");
         curveAction.getParamRight().getSpeed().accept(this);
-        this.sb.append("), ");
+        this.sb.append(", -100), 100), ");
         this.sb.append(confForward == blockForward);
         if ( isDuration ) {
             this.sb.append(", ");
@@ -791,10 +798,10 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
         switch ( timerSensor.getMode() ) {
             case SC.DEFAULT:
             case SC.VALUE:
-                this.sb.append("GetTimerValue(timer" + timerNumber + ")");
+                this.sb.append("(CurrentTick() - timer" + timerNumber + ")");
                 break;
             case SC.RESET:
-                this.sb.append("ResetTimerValue(timer" + timerNumber + ");");
+                this.sb.append("timer" + timerNumber + " = CurrentTick();");
                 break;
             default:
                 throw new DbcException("Invalid Time Mode!");
@@ -844,43 +851,31 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
 
     @Override
     public Void visitIndexOfFunct(IndexOfFunct<Void> indexOfFunct) {
-        BlocklyType arrayType = indexOfFunct.getParam().get(0).getVarType();
-        String methodName = "ArrFindFirst";
-        if ( indexOfFunct.getLocation() == IndexLocation.LAST ) {
-            methodName = "ArrFindLast";
-        }
-        switch ( arrayType ) {
-            case NUMBER:
-            case ARRAY_CONNECTION:
-            case ARRAY_NUMBER:
-            case ARRAY_COLOUR:
-                methodName += "Num(";
-                break;
-            case STRING:
-            case ARRAY_STRING:
-                methodName += "Str(";
-                break;
-            case BOOLEAN:
-            case ARRAY_BOOLEAN:
-                methodName += "Bool(";
-                break;
-            case NOTHING:
-                methodName += "Num(";
-            default:
-                throw new DbcException("Invalid array type: " + arrayType);
-        }
-
-        this.sb.append(methodName);
-        /*if ( !indexOfFunct.getParam().get(0).getVarType().toString().contains("ARRAY") ) {
-            this.tmpArrCount += 1;
-            this.sb.append("__tmpArr" + this.tmpArrCount);
-        } else {*/
+        this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(getMethodForIndexOf(indexOfFunct)));
+        this.sb.append("(");
         indexOfFunct.getParam().get(0).accept(this);
-        //}
         this.sb.append(", ");
         indexOfFunct.getParam().get(1).accept(this);
         this.sb.append(")");
         return null;
+    }
+
+    public static NxtMethods getMethodForIndexOf(IndexOfFunct<Void> indexOfFunct) {
+        switch ( indexOfFunct.getParam().get(0).getVarType() ) {
+            case NUMBER:
+            case ARRAY_CONNECTION:
+            case ARRAY_NUMBER:
+            case ARRAY_COLOUR:
+                return (indexOfFunct.getLocation() == IndexLocation.LAST) ? NxtMethods.FIND_LAST_NUM : NxtMethods.FIND_FIRST_NUM;
+            case STRING:
+            case ARRAY_STRING:
+                return (indexOfFunct.getLocation() == IndexLocation.LAST) ? NxtMethods.FIND_LAST_STR : NxtMethods.FIND_FIRST_STR;
+            case BOOLEAN:
+            case ARRAY_BOOLEAN:
+                return (indexOfFunct.getLocation() == IndexLocation.LAST) ? NxtMethods.FIND_LAST_BOOL : NxtMethods.FIND_FIRST_BOOL;
+            default:
+                throw new DbcException("Invalid array type: " + indexOfFunct.getParam().get(0).getVarType());
+        }
     }
 
     @Override
@@ -910,24 +905,28 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
         this.sb.append("[");
         switch ( location ) {
             case FIRST:
-                this.sb.append("sanitiseFromStart(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_START));
+                this.sb.append("(ArrayLen(");
                 listGetIndex.getParam().get(0).accept(this);
                 this.sb.append("), 0");
                 break;
             case FROM_END:
-                this.sb.append("sanitiseFromEnd(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_END));
+                this.sb.append("(ArrayLen(");
                 listGetIndex.getParam().get(0).accept(this);
                 this.sb.append("), -1 - ");
                 listGetIndex.getParam().get(1).accept(this);
                 break;
             case FROM_START:
-                this.sb.append("sanitiseFromStart(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_START));
+                this.sb.append("(ArrayLen(");
                 listGetIndex.getParam().get(0).accept(this);
                 this.sb.append("), ");
                 listGetIndex.getParam().get(1).accept(this);
                 break;
             case LAST:
-                this.sb.append("sanitiseFromEnd(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_END));
+                this.sb.append("(ArrayLen(");
                 listGetIndex.getParam().get(0).accept(this);
                 this.sb.append("), -1");
                 break;
@@ -935,7 +934,8 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 // provided for backwards compatibility,
                 // frontend does not have an option to choose this
                 // but old programs may contain this option
-                this.sb.append("sanitiseFromStart(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_START));
+                this.sb.append("(ArrayLen(");
                 listGetIndex.getParam().get(0).accept(this);
                 this.sb.append("), 0");
                 break;
@@ -958,24 +958,28 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
         this.sb.append("[");
         switch ( location ) {
             case FIRST:
-                this.sb.append("sanitiseFromStart(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_START));
+                this.sb.append("(ArrayLen(");
                 listSetIndex.getParam().get(0).accept(this);
                 this.sb.append("), 0");
                 break;
             case FROM_END:
-                this.sb.append("sanitiseFromEnd(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_END));
+                this.sb.append("(ArrayLen(");
                 listSetIndex.getParam().get(0).accept(this);
                 this.sb.append("), -1 - ");
                 listSetIndex.getParam().get(2).accept(this);
                 break;
             case FROM_START:
-                this.sb.append("sanitiseFromStart(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_START));
+                this.sb.append("(ArrayLen(");
                 listSetIndex.getParam().get(0).accept(this);
                 this.sb.append("), ");
                 listSetIndex.getParam().get(2).accept(this);
                 break;
             case LAST:
-                this.sb.append("sanitiseFromEnd(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_END));
+                this.sb.append("(ArrayLen(");
                 listSetIndex.getParam().get(0).accept(this);
                 this.sb.append("), -1");
                 break;
@@ -983,7 +987,8 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 // provided for backwards compatibility,
                 // frontend does not have an option to choose this
                 // but old programs may contain this option
-                this.sb.append("sanitiseFromStart(ArrayLen(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(NxtMethods.SANITISE_FROM_START));
+                this.sb.append("(ArrayLen(");
                 listSetIndex.getParam().get(0).accept(this);
                 this.sb.append("), 0");
                 break;
@@ -1001,11 +1006,11 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
 
     @Override
     public Void visitMathConstrainFunct(MathConstrainFunct<Void> mathConstrainFunct) {
-        this.sb.append("Constrain(");
+        this.sb.append("MIN(MAX(");
         mathConstrainFunct.getParam().get(0).accept(this);
         this.sb.append(", ");
         mathConstrainFunct.getParam().get(1).accept(this);
-        this.sb.append(", ");
+        this.sb.append("), ");
         mathConstrainFunct.getParam().get(2).accept(this);
         this.sb.append(")");
         return null;
@@ -1025,16 +1030,18 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 this.sb.append(" % 2 != 0)");
                 break;
             case PRIME:
-                this.sb.append("MathPrime(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(FunctionNames.PRIME));
+                this.sb.append("(");
                 mathNumPropFunct.getParam().get(0).accept(this);
                 this.sb.append(")");
                 break;
             // % in nxc % doesn't leave a a fractional residual, e.g. 5.2%1 = 0, so it is not possible to check the wholeness by "%1", that is why
             //an additional function is used
             case WHOLE:
-                this.sb.append("(frac(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(FunctionNames.WHOLE));
+                this.sb.append("(");
                 mathNumPropFunct.getParam().get(0).accept(this);
-                this.sb.append(")) == 0");
+                this.sb.append(")");
                 break;
             case POSITIVE:
                 this.sb.append("(");
@@ -1064,26 +1071,18 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
     public Void visitMathOnListFunct(MathOnListFunct<Void> mathOnListFunct) {
         switch ( mathOnListFunct.getFunctName() ) {
             case SUM:
-                this.sb.append("ArraySum(");
-                break;
             case MIN:
-                this.sb.append("ArrayMin(");
-                break;
             case MAX:
-                this.sb.append("ArrayMax(");
-                break;
             case AVERAGE:
-                this.sb.append("ArrayMean(");
-                break;
             case MEDIAN:
-                this.sb.append("ArrMedian(");
-                break;
             case STD_DEV:
-                this.sb.append("ArrayStd(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(mathOnListFunct.getFunctName()));
+                this.sb.append("(");
                 break;
             case RANDOM:
-                this.sb.append("ArrRand(");
-                break;
+                mathOnListFunct.getParam().get(0).accept(this);
+                this.sb.append("[0]");
+                return null;
             default:
                 break;
         }
@@ -1100,11 +1099,12 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
 
     @Override
     public Void visitMathRandomIntFunct(MathRandomIntFunct<Void> mathRandomIntFunct) {
-        this.sb.append("RandomIntegerInRange(");
-        mathRandomIntFunct.getParam().get(0).accept(this);
-        this.sb.append(", ");
+        this.sb.append("Random(");
         mathRandomIntFunct.getParam().get(1).accept(this);
-        this.sb.append(")");
+        this.sb.append(" - ");
+        mathRandomIntFunct.getParam().get(0).accept(this);
+        this.sb.append(") + ");
+        mathRandomIntFunct.getParam().get(0).accept(this);
         return null;
     }
 
@@ -1118,44 +1118,26 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
                 this.sb.append("abs(");
                 break;
             case LN:
-                this.sb.append("log(");
-                break;
             case LOG10:
-                this.sb.append("log10(");
+            case SIN:
+            case COS:
+            case TAN:
+            case ASIN:
+            case ATAN:
+            case ACOS:
+            case ROUND:
+            case ROUNDUP:
+            case ROUNDDOWN:
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(mathSingleFunct.getFunctName()));
+                this.sb.append("(");
                 break;
             case EXP:
-                this.sb.append("exp(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(FunctionNames.POWER));
+                this.sb.append("(2.718281828459045, ");
                 break;
             case POW10:
-                this.sb.append("pow(10, ");
-                break;
-            // d for degree
-            case SIN:
-                this.sb.append("sind(");
-                break;
-            case COS:
-                this.sb.append("cosd(");
-                break;
-            case TAN:
-                this.sb.append("tand(");
-                break;
-            case ASIN:
-                this.sb.append("asind(");
-                break;
-            case ATAN:
-                this.sb.append("atand(");
-                break;
-            case ACOS:
-                this.sb.append("acosd(");
-                break;
-            case ROUND:
-                this.sb.append("floor(0.5 + ");
-                break;
-            case ROUNDUP:
-                this.sb.append("ceil(");
-                break;
-            case ROUNDDOWN:
-                this.sb.append("floor(");
+                this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(FunctionNames.POWER));
+                this.sb.append("(10, ");
                 break;
             default:
                 break;
@@ -1168,7 +1150,8 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
 
     @Override
     public Void visitMathPowerFunct(MathPowerFunct<Void> mathPowerFunct) {
-        this.sb.append("pow(");
+        this.sb.append(this.getBean(CodeGeneratorSetupBean.class).getHelperMethodGenerator().getHelperMethodName(FunctionNames.POWER));
+        this.sb.append("(");
         super.visitMathPowerFunct(mathPowerFunct);
         return null;
     }
@@ -1242,10 +1225,13 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
         nlIndent();
         this.sb.append("#define MAXLINES 8");
         nlIndent();
-        this.sb.append("#include \"NEPODefs.h\" // contains NEPO declarations for the NXC NXT API resources");
+        this.sb.append("#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))");
+        nlIndent();
+        this.sb.append("#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))");
         nlIndent();
         nlIndent();
         generateSignaturesOfUserDefinedMethods();
+        super.generateProgramPrefix(withWrapping);
     }
 
     @Override
@@ -1257,6 +1243,7 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
             nlIndent();
         }
         generateUserDefinedMethods();
+        super.generateProgramSuffix(withWrapping);
     }
 
     @Override
@@ -1339,7 +1326,7 @@ public final class NxtNxcVisitor extends AbstractCppVisitor implements INxtVisit
         }
         if ( this.getBean(UsedHardwareBean.class).isSensorUsed(SC.TIMER) ) {
             nlIndent();
-            this.sb.append("SetTimerValue(timer1);");
+            this.sb.append("timer1 = CurrentTick();");
         }
     }
 
