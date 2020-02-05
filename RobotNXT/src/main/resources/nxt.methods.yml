@@ -65,7 +65,7 @@ BOOL_OUT:
 
 POWER:
   C: |
-    inline float MathPow(float firstValue, float secondValue) {
+    float MathPow(float firstValue, float secondValue) {
         float result = 1;
         for (int i = 0; i < abs(secondValue); i++) {
             result = result * firstValue;
@@ -83,33 +83,33 @@ POWER:
 
 ROUNDDOWN:
   C: |
-    inline int MathFloor(float val) {
+    int MathFloor(float val) {
         int temp = val;
         return temp;
     }
 
 ROUND:
   C: |
-    inline int MathRound(float val) {
+    int MathRound(float val) {
         return MathFloor(0.5 + val);
     }
 
 ROUNDUP:
   C: |
-    inline int MathRoundUp(float val) {
+    int MathRoundUp(float val) {
         return (1 + MathFloor(val));
     }
 
 WHOLE:
   C: |
-    inline bool MathIsWhole(float val) {
+    bool MathIsWhole(float val) {
         int intPart = val;
         return ((val - intPart) == 0);
     }
 
 PRIME:
   C: |
-    inline bool MathPrime(float number) {
+    bool MathPrime(float number) {
         if ((number % 2 == 0) || (number == 1)) return false;
         //if not, then just check the odds
         for (int i = 3; i * i <= number; i += 2) {
@@ -121,7 +121,7 @@ PRIME:
 
 LN:
   C: |
-    inline float MathLn(float val) {
+    float MathLn(float val) {
         if (val > 1) {
             float values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 10000};
             float results[] = {0, 0.693147, 1.098612, 1.386294, 1.609438, 1.791759, 1.945910, 2.079442, 2.197225, 2.302585, 2.995732, 3.401197, 3.688879, 3.912023, 4.094345, 4.248495, 4.382027, 4.499810, 4.605170, 5.298317, 5.703782, 5.991465, 6.214608, 6.396930, 6.551080, 6.684612, 6.802395, 6.907755, 9.210340};
@@ -151,13 +151,13 @@ LN:
 
 LOG10:
   C: |
-    inline float MathLog(float val) {
+    float MathLog(float val) {
         return MathLn(val) / MathLn(2.71828);
     }
 
 FACTORIAL:
   C: |
-    inline float MathFactorial(float val) {
+    float MathFactorial(float val) {
         float result = val;
         if (val == 0) {
             return 1;
@@ -171,7 +171,7 @@ FACTORIAL:
 
 SIN:
   C: |
-    inline float MathSin(float val) {
+    float MathSin(float val) {
         float angle = PI * val / 180;
         float summ = 0;
         for (int n = 0; n < 10; n++) {
@@ -182,7 +182,7 @@ SIN:
 
 COS:
   C: |
-    inline float MathCos(float val) {
+    float MathCos(float val) {
         float angle = PI * val / 180;
         float summ = 0;
         for (float n = 0; n < 10; n++) {
@@ -193,13 +193,13 @@ COS:
 
 TAN:
   C: |
-    inline float MathTan(float val) {
+    float MathTan(float val) {
         return MathSin(val) / MathCos(val);
     }
 
 ASIN:
   C: |
-    inline float MathAsin(float val) {
+    float MathAsin(float val) {
         if (abs(val) > 1) {
             TextOut(0, LCD_LINE1, "invalid value");
             Wait(1000);
@@ -216,7 +216,7 @@ ASIN:
 
 ACOS:
   C: |
-    inline float MathAcos(float val) {
+    float MathAcos(float val) {
         if (abs(val) > 1) {
             TextOut(0, LCD_LINE1, "invalid value");
             Wait(1000);
@@ -229,7 +229,7 @@ ACOS:
 
 ATAN:
   C: |
-    inline float MathAtan(float val) {
+    float MathAtan(float val) {
         if (abs(val) > 1) {
             float values[] = {1, sqrt(3), 2, 3, 0x7f800000};
             float results[] = {45, 60, 63.435, 71.565, 90};
@@ -254,7 +254,7 @@ ATAN:
 
 SUM:
   C: |
-    inline float ArrSum(float arr[]) {
+    float ArrSum(float arr[]) {
         float sum = 0;
         for (int i = 0; i < ArrayLen(arr); i++) {
             sum += arr[i];
@@ -264,7 +264,7 @@ SUM:
 
 MIN:
   C: |
-    inline float ArrMin(float arr[]) {
+    float ArrMin(float arr[]) {
         float min = arr[0];
         for (int i = 1; i < ArrayLen(arr); i++) {
             if (arr[i] < min) {
@@ -276,7 +276,7 @@ MIN:
 
 MAX:
   C: |
-    inline float ArrMax(float arr[]) {
+    float ArrMax(float arr[]) {
         float max = arr[0];
         for (int i = 1; i < ArrayLen(arr); i++) {
             if (arr[i] > max) {
@@ -288,13 +288,13 @@ MAX:
 
 IDTY:
   C: |
-    inline int idty(int id) {
+    int idty(int id) {
         return id;
     }
 
 AVERAGE:
   C: |
-    inline float ArrMean(float arr[]) {
+    float ArrMean(float arr[]) {
         float sum = 0;
         for (int i = 0; i < ArrayLen(arr); i++) {
             sum += arr[i];
@@ -304,7 +304,7 @@ AVERAGE:
 
 INSERTION_SORT:
   C: |
-    inline void ArrInsertionSort(float& arr[]) {
+    void ArrInsertionSort(float& arr[]) {
         for (int i = 1; i < ArrayLen(arr); i++) {
             int index = arr[i];
             int j = i;
@@ -318,7 +318,7 @@ INSERTION_SORT:
 
 MEDIAN:
   C: |
-    inline float ArrMedian(float arr[]) {
+    float ArrMedian(float arr[]) {
         int n = idty(ArrayLen(arr));
         if (n == 0) {
             return 0;
@@ -335,7 +335,7 @@ MEDIAN:
 
 STD_DEV:
   C: |
-    inline float ArrStandardDeviatioin(float arr[]) {
+    float ArrStandardDeviatioin(float arr[]) {
         int n = idty(ArrayLen(arr));
         if (n == 0) {
             return 0;
@@ -351,7 +351,7 @@ STD_DEV:
 
 MODE:
   C: |
-    inline float ArrMode(float arr[]) {
+    float ArrMode(float arr[]) {
         ArrInsertionSort(arr);
         float element = arr[0];
         float max_seen = element;
@@ -374,7 +374,7 @@ MODE:
 
 FIND_FIRST_NUM:
   C: |
-    inline int ArrFindFirstNum(float arr[], float item) {
+    int ArrFindFirstNum(float arr[], float item) {
         int i = 0;
         if (arr[0] == item) {
             return i;
@@ -388,7 +388,7 @@ FIND_FIRST_NUM:
 
 FIND_LAST_NUM:
   C: |
-    inline int ArrFindLastNum(float arr[], float item) {
+    int ArrFindLastNum(float arr[], float item) {
         int i = 0;
         if (arr[idty(ArrayLen(arr)) - 1] == item) {
             return idty(ArrayLen(arr)) - 1 - i;
@@ -402,7 +402,7 @@ FIND_LAST_NUM:
 
 FIND_FIRST_STR:
   C: |
-    inline int ArrFindFirstStr(string arr[], string item) {
+    int ArrFindFirstStr(string arr[], string item) {
         int i = 0;
         if (arr[0] == item) {
             return i;
@@ -416,7 +416,7 @@ FIND_FIRST_STR:
 
 FIND_LAST_STR:
   C: |
-    inline int ArrFindLastStr(string arr[], string item) {
+    int ArrFindLastStr(string arr[], string item) {
         int i = 0;
         if (arr[idty(ArrayLen(arr)) - 1] == item) {
             return idty(ArrayLen(arr)) - 1 - i;
@@ -430,7 +430,7 @@ FIND_LAST_STR:
 
 FIND_FIRST_BOOL:
   C: |
-    inline int ArrFindFirstBool(bool arr[], bool item) {
+    int ArrFindFirstBool(bool arr[], bool item) {
         int i = 0;
         if (arr[0] == item) {
             return i;
@@ -444,7 +444,7 @@ FIND_FIRST_BOOL:
 
 FIND_LAST_BOOL:
   C: |
-    inline int ArrFindLastBool(bool arr[], bool item) {
+    int ArrFindLastBool(bool arr[], bool item) {
         int i = 0;
         if (arr[idty(ArrayLen(arr)) - 1] == item) {
             return idty(ArrayLen(arr)) - 1 - i;
