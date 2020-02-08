@@ -79,6 +79,28 @@ define([ 'simulation.simulation', 'interpreter.constants', 'simulation.robot', '
             lightValue : 0,
             color : 'grey'
         };
+        this.sideColorSensors = [
+        {
+            x : 12,
+            y : -15,
+            rx : 0,
+            ry : 0,
+            r : 5,
+            colorValue : 0,
+            lightValue : 0,
+            color : 'grey'
+        },
+	{
+            x : -12,
+            y : -15,
+            rx : 0,
+            ry : 0,
+            r : 5,
+            colorValue : 0,
+            lightValue : 0,
+            color : 'grey'
+        }
+	];
         this.touchSensor = {
             x : 0,
             y : -25,
@@ -431,6 +453,8 @@ define([ 'simulation.simulation', 'interpreter.constants', 'simulation.robot', '
 
         this.touchSensor = this.translate(sin, cos, this.touchSensor);
         this.colorSensor = this.translate(sin, cos, this.colorSensor);
+        this.sideColorSensors[0] = this.translate(sin, cos, this.sideColorSensors[0]);
+        this.sideColorSensors[1] = this.translate(sin, cos, this.sideColorSensors[1]);
         this.ultraSensor = this.translate(sin, cos, this.ultraSensor);
         this.mouse = this.translate(sin, cos, this.mouse);
 

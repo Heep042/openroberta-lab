@@ -60,7 +60,20 @@ define(["require", "exports", "interpreter.aRobotBehaviour", "interpreter.consta
             }
         };
         RobotMbedBehaviour.prototype.getSensorValue = function (sensorName, mode) {
+
+            if (sensorName == "color") {
+                if (mode == "light")
+                    this.hardwareState.sensors[sensorName] = this.hardwareState.sensors["colorArray"][1];
+                else if (mode == "ambientlight")
+                    this.hardwareState.sensors[sensorName] = this.hardwareState.sensors["colorArray"][2];
+            }
+
             var sensor = this.hardwareState.sensors[sensorName];
+
+            if (sensorName == "color" && mode == "colour") {
+                this.hardwareState.sensors[sensorName] = this.hardwareState.sensors["colorArray"][0];
+            }
+
             if (sensor === undefined) {
                 return "undefined";
             }

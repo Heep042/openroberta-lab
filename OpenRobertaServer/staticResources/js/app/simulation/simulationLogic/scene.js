@@ -202,6 +202,10 @@ define([ 'simulation.simulation', 'simulation.math', 'util', 'interpreter.consta
                 $("#notConstantValue").append('<div><label>Touch Sensor</label><span>' + UTIL.round(this.robots[r].touchSensor.value, 0) + '</span></div>');
                 $("#notConstantValue").append('<div><label>Light Sensor</label><span>' + UTIL.round(this.robots[r].colorSensor.lightValue, 0)
                         + '%</span></div>');
+                for (var s = 0; s < 2; s++) {
+                        $("#notConstantValue").append('<div><label>Light Sensor S' + s + ' </label><span>' + UTIL.round(this.robots[r].sideColorSensors[s].lightValue, 0)
+                             + '%</span></div>');
+                }
                 $("#notConstantValue").append('<div><label>Ultra Sensor</label><span>' + UTIL.roundUltraSound(this.robots[r].ultraSensor.distance / 3.0, 0)
                         + 'cm</span></div>');
                 if (this.robots[r].sound) {
@@ -210,6 +214,10 @@ define([ 'simulation.simulation', 'simulation.math', 'util', 'interpreter.consta
                 }
                 $("#notConstantValue").append('<div><label>Color Sensor</label><span style="margin-left:6px; width: 20px; background-color:'
                         + this.robots[r].colorSensor.color + '">&nbsp;</span></div>');
+                for (var s = 0; s < 2; s++) {
+                        $("#notConstantValue").append('<div><label>Color Sensor S' + s + ' </label><span style="margin-left:6px; width: 20px; background-color:'
+                                + this.robots[r].sideColorSensors[s].color + '">&nbsp;</span></div>');
+                }
 
             }
             this.rCtx.scale(SIM.getScale(), SIM.getScale());
@@ -293,6 +301,16 @@ define([ 'simulation.simulation', 'simulation.math', 'util', 'interpreter.consta
             this.rCtx.fill();
             this.rCtx.strokeStyle = "black";
             this.rCtx.stroke();
+
+            for (var i = 0; i < 2; i++) {
+                this.rCtx.beginPath();
+                this.rCtx.arc(this.robots[r].sideColorSensors[i].x, this.robots[r].sideColorSensors[i].y, this.robots[r].sideColorSensors[i].r, 0, Math.PI * 2);
+                this.rCtx.fillStyle = this.robots[r].sideColorSensors[i].color;
+                this.rCtx.fill();
+                this.rCtx.strokeStyle = "black";
+                this.rCtx.stroke();
+            }
+
             //ledSensor
             if (this.robots[r].ledSensor && this.robots[r].ledSensor.color) {
                 this.rCtx.fillStyle = this.robots[r].ledSensor.color;
@@ -544,55 +562,75 @@ define([ 'simulation.simulation', 'simulation.math', 'util', 'interpreter.consta
                     values.touch = false;
                 }
             }
-            if (this.robots[r].colorSensor) {
-                var red = 0;
-                var green = 0;
-                var blue = 0;
-                var colors = this.uCtx.getImageData(Math.round(this.robots[r].colorSensor.rx - 3), Math.round(this.robots[r].colorSensor.ry - 3), 6, 6);
-                var out = [0, 4, 16, 20, 24, 44, 92, 116, 120, 124, 136, 140]; // outside the circle
-                for (var j = 0; j < colors.data.length; j += 24) {
-                    for (var i = j; i < j + 24; i += 4) {
-                        if (out.indexOf(i) < 0) {
-                            red += colors.data[i + 0];
-                            green += colors.data[i + 1];
-                            blue += colors.data[i + 2];
+    
+            values.color = {};
+            values.light = {};
+            values.colorArray = [];
+
+            for (var s = -1; s < 2; s++) {
+                var robotColorSensor = this.robots[r].colorSensor;
+                if (s >= 0)
+                    robotColorSensor = this.robots[r].sideColorSensors[s];
+
+                if (robotColorSensor) {
+                    var red = 0;
+                    var green = 0;
+                    var blue = 0;
+                    var colors = this.uCtx.getImageData(Math.round(robotColorSensor.rx - 3), Math.round(robotColorSensor.ry - 3), 6, 6);
+                    var out = [0, 4, 16, 20, 24, 44, 92, 116, 120, 124, 136, 140]; // outside the circle
+                    for (var j = 0; j < colors.data.length; j += 24) {
+                        for (var i = j; i < j + 24; i += 4) {
+                            if (out.indexOf(i) < 0) {
+                                red += colors.data[i + 0];
+                                green += colors.data[i + 1];
+                                blue += colors.data[i + 2];
+                            }
                         }
                     }
-                }
-                var num = colors.data.length / 4 - 12; // 12 are outside
-                var red = red / num;
-                var green = green / num;
-                var blue = blue / num;
-                values.color = {};
-                values.light = {};
-                this.robots[r].colorSensor.colorValue = SIMATH.getColor(SIMATH.rgbToHsv(red, green, blue));
-                values.color.colorValue = this.robots[r].colorSensor.colorValue;
-                values.color.colour = this.robots[r].colorSensor.colorValue;
-                if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.NONE) {
-                    this.robots[r].colorSensor.color = 'grey';
-                } else if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.BLACK) {
-                    this.robots[r].colorSensor.color = 'black';
-                } else if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.WHITE) {
-                    this.robots[r].colorSensor.color = 'white';
-                } else if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.YELLOW) {
-                    this.robots[r].colorSensor.color = 'yellow';
-                } else if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.BROWN) {
-                    this.robots[r].colorSensor.color = 'brown';
-                } else if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.RED) {
-                    this.robots[r].colorSensor.color = 'red';
-                } else if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.BLUE) {
-                    this.robots[r].colorSensor.color = 'blue';
-                } else if (this.robots[r].colorSensor.colorValue === C.COLOR_ENUM.GREEN) {
-                    this.robots[r].colorSensor.color = 'lime';
-                }
-                this.robots[r].colorSensor.lightValue = ((red + green + blue) / 3 / 2.55);
+                    var num = colors.data.length / 4 - 12; // 12 are outside
+                    var red = red / num;
+                    var green = green / num;
+                    var blue = blue / num;
 
-                values.color.light = this.robots[r].colorSensor.lightValue;
-                values.color.rgb = [UTIL.round(red, 0), UTIL.round(green, 0), UTIL.round(blue, 0)];
-                values.color.ambientlight = 0;
+                    var newColor = {};
+                    var newLight = {};
 
-                values.light.light = this.robots[r].colorSensor.lightValue;
-                values.light.ambientlight = 0;
+                    robotColorSensor.colorValue = SIMATH.getColor(SIMATH.rgbToHsv(red, green, blue));
+                    newColor.colorValue = robotColorSensor.colorValue;
+                    newColor.colour = robotColorSensor.colorValue;
+                    if (robotColorSensor.colorValue === C.COLOR_ENUM.NONE) {
+                        robotColorSensor.color = 'grey';
+                    } else if (robotColorSensor.colorValue === C.COLOR_ENUM.BLACK) {
+                        robotColorSensor.color = 'black';
+                    } else if (robotColorSensor.colorValue === C.COLOR_ENUM.WHITE) {
+                        robotColorSensor.color = 'white';
+                    } else if (robotColorSensor.colorValue === C.COLOR_ENUM.YELLOW) {
+                        robotColorSensor.color = 'yellow';
+                    } else if (robotColorSensor.colorValue === C.COLOR_ENUM.BROWN) {
+                        robotColorSensor.color = 'brown';
+                    } else if (robotColorSensor.colorValue === C.COLOR_ENUM.RED) {
+                        robotColorSensor.color = 'red';
+                    } else if (robotColorSensor.colorValue === C.COLOR_ENUM.BLUE) {
+                        robotColorSensor.color = 'blue';
+                    } else if (robotColorSensor.colorValue === C.COLOR_ENUM.GREEN) {
+                        robotColorSensor.color = 'lime';
+                    }
+                    robotColorSensor.lightValue = ((red + green + blue) / 3 / 2.55);
+
+                    newColor.light = robotColorSensor.lightValue;
+                    newColor.rgb = [UTIL.round(red, 0), UTIL.round(green, 0), UTIL.round(blue, 0)];
+                    newColor.ambientlight = 0;
+
+                    newLight.light = robotColorSensor.lightValue;
+                    newLight.ambientlight = 0;
+
+                    if (s == -1) {
+                        values.color = newColor;
+                        values.light = newLight;
+                    }
+
+                    values.colorArray.push(newColor);
+                }
             }
 
             if (this.robots[r].ultraSensor) {
