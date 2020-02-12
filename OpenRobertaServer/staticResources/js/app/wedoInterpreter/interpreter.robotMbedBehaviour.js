@@ -70,7 +70,7 @@ define(["require", "exports", "interpreter.aRobotBehaviour", "interpreter.consta
 
             var sensor = this.hardwareState.sensors[sensorName];
 
-            if (sensorName == "color" && mode == "colour") {
+            if (sensorName == "color" && (mode == "colour" || mode == "rgb")) {
                 this.hardwareState.sensors[sensorName] = this.hardwareState.sensors["colorArray"][0];
             }
 
