@@ -1,7 +1,7 @@
 {
 	"@metadata": {
 		"author": "Ellen Spertus <ellen.spertus@gmail.com>",
-		"lastupdated": "2020-01-17 15:29:56.700838",
+		"lastupdated": "2020-02-11 15:18:38.383574",
 		"locale": "en",
 		"messagedocumentation" : "qqq"
 	},
@@ -378,7 +378,7 @@
 	"MOTOR_ON_FOR_TOOLTIP": "Turns motor on and stops motor after execution of rotations/degrees.",
 	"MOTOR_ON_FOR_TOOLTIP_MS": "Turns motor on and stops motor after execution after time has passed.",
 	"MOTOR_ON_FOR_TOOLTIP_RPM": "Turns motor on at speed in rpms (rotation per minute) and stops motor after execution of rotations/degrees.",
-	"MOTOR_ON_FOR_TOOLTIP_SERVO": "Turns motor on and stops motor after execution of rotations/degrees.",
+	"MOTOR_ON_FOR_TOOLTIP_SERVO": "Sets the servo motor to a specific position in degrees.",
 	"STEP_MOTOR_ON_TOOLTIP": "Turns motor on with a provided speed in rpm and stops motor after execution of provided number of rotations.",
 	"MOTOR_GETPOWER_TOOLTIP": "Gets current power of this motor.",
 	"MOTOR_SETPOWER_TOOLTIP": "Sets power of this motor.",
@@ -924,7 +924,7 @@
 	"ORA_USER_PASSWORD_RECOVERY_EXPIRED_URL": "The link is not valid anymore. Please ask for resetting your password again, if you still cannot remember it!",
 	"ORA_USER_PASSWORD_RECOVERY_SENT_MAIL_FAIL": "Sorry, we cannot send a mail to you, please contact »support-o-r@iais.fraunhofer.de«",
 	"ORA_USER_PASSWORD_RECOVERY_SENT_MAIL_SUCCESS": "We send a mail to you, please check your mailbox!",
-	"ORA_USER_UPDATE_SUCCESS": "Your password has been successfully changed!",
+	"ORA_USER_UPDATE_SUCCESS": "Your changes have been successfully saved!",
 	"LIGHT_TOOLTIP": "Represents a light sensor.",
 	"LIGHT_ARDU_TOOLTIP": "Represents 8 light sensors.",
 	"CENTER": "center",
@@ -1609,6 +1609,9 @@
 	"ACCELEROMETER_TOOLTIP": "Represents an accelerometer.",
 	"POPUP_CREATE_BOOKMARK": "Create a bookmark now to save your robot selection!",
 	"POPUP_BACKGROUND_STORAGE": "The Open Roberta Lab can automatically load your simulation background on your next visits. For this purpose, we will save data in the Local Storage on your computer. <a href='https://www.roberta-home.de/en/privacy-policy-open-roberta-lab/' target='_blank'>More information in our privacy policy.</a>",
+	"MOTIONKIT": "MotionKit",
+	"MOTIONKIT_SINGLE_TOOLTIP": "Sets the selected MotionKit motor/motors to the specified direction.",
+	"MOTIONKIT_DUAL_TOOLTIP": "Sets each MotionKit motor to the specified direction.",
 	"GPS_TOOLTIP": "Represents a GPS receiver.",
 	"SENSOR_GPS_SENSEBOX": "GPS receiver",
 	"SENSOR_GPS_LATITUDE_GETSAMPLE_TOOLTIP_SENSEBOX": "Returns the latitude in degree.",

@@ -31,10 +31,13 @@ import de.fhg.iais.roberta.syntax.action.mbed.FourDigitDisplayClearAction;
 import de.fhg.iais.roberta.syntax.action.mbed.FourDigitDisplayShowAction;
 import de.fhg.iais.roberta.syntax.action.mbed.LedBarSetAction;
 import de.fhg.iais.roberta.syntax.action.mbed.LedOnAction;
+import de.fhg.iais.roberta.syntax.action.mbed.MotionKitDualSetAction;
+import de.fhg.iais.roberta.syntax.action.mbed.MotionKitSingleSetAction;
 import de.fhg.iais.roberta.syntax.action.mbed.PinSetPullAction;
 import de.fhg.iais.roberta.syntax.action.mbed.RadioReceiveAction;
 import de.fhg.iais.roberta.syntax.action.mbed.RadioSendAction;
 import de.fhg.iais.roberta.syntax.action.mbed.RadioSetChannelAction;
+import de.fhg.iais.roberta.syntax.action.mbed.ServoSetAction;
 import de.fhg.iais.roberta.syntax.action.mbed.SingleMotorOnAction;
 import de.fhg.iais.roberta.syntax.action.mbed.SingleMotorStopAction;
 import de.fhg.iais.roberta.syntax.action.mbed.SwitchLedMatrixAction;
@@ -1394,6 +1397,104 @@ public final class CalliopeCppVisitor extends AbstractCppVisitor implements IMbe
             this.sb.append("\");");
         } else {
             super.visitAssertStmt(assertStmt);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitServoSetAction(ServoSetAction<Void> servoSetAction) {
+        String userDefinedName = servoSetAction.getPort();
+        String port = this.robotConfiguration.getConfigurationComponent(userDefinedName).getPortName();
+        this.sb.append("_uBit.io.").append(port).append(".setServoValue(");
+        servoSetAction.getValue().accept(this);
+        this.sb.append(");");
+
+        return null;
+    }
+
+    @Override
+    public Void visitMotionKitSingleSetAction(MotionKitSingleSetAction<Void> motionKitSingleSetAction) {
+        String userDefinedName = motionKitSingleSetAction.getPort();
+        String currentPort = this.robotConfiguration.getConfigurationComponent(userDefinedName).getPortName();
+        String rightMotorPort = this.robotConfiguration.getConfigurationComponent("C16").getPortName(); // C16 is the right motor
+        String leftMotorPort = this.robotConfiguration.getConfigurationComponent("C17").getPortName(); // C17 is the left motor
+        String direction = motionKitSingleSetAction.getDirection();
+        // for the right motor (C16) 0 is forwards and 180 is backwards
+        // for the left  motor (C17) 180 is forwards and 0 is backwards
+        if (currentPort.equals(SC.BOTH)) {
+            switch ( direction ) {
+                case SC.FOREWARD:
+                    this.sb.append("_uBit.io.").append(rightMotorPort).append(".setServoValue(0);");
+                    nlIndent();
+                    this.sb.append("_uBit.io.").append(leftMotorPort).append(".setServoValue(180);");
+                    break;
+                case SC.BACKWARD:
+                    this.sb.append("_uBit.io.").append(rightMotorPort).append(".setServoValue(180);");
+                    nlIndent();
+                    this.sb.append("_uBit.io.").append(leftMotorPort).append(".setServoValue(0);");
+                    break;
+                case SC.OFF:
+                    this.sb.append("_uBit.io.").append(rightMotorPort).append(".setAnalogValue(0);");
+                    nlIndent();
+                    this.sb.append("_uBit.io.").append(leftMotorPort).append(".setAnalogValue(0);");
+                    break;
+                default:
+                    throw new DbcException("Invalid direction!");
+            }
+        } else {
+            switch ( motionKitSingleSetAction.getDirection() ) {
+                case SC.FOREWARD:
+                    this.sb.append("_uBit.io.").append(currentPort).append(".setServoValue(");
+                    this.sb.append(currentPort.equals(rightMotorPort) ? 0 : 180);
+                    this.sb.append(");");
+                    break;
+                case SC.BACKWARD:
+                    this.sb.append("_uBit.io.").append(currentPort).append(".setServoValue(");
+                    this.sb.append(currentPort.equals(rightMotorPort) ? 180 : 0);
+                    this.sb.append(");");
+                    break;
+                case SC.OFF:
+                    this.sb.append("_uBit.io.").append(currentPort).append(".setAnalogValue(0);");
+                    break;
+                default:
+                    throw new DbcException("Invalid direction!");
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitMotionKitDualSetAction(MotionKitDualSetAction<Void> motionKitDualSetAction) {
+        String rightMotorPort = this.robotConfiguration.getConfigurationComponent("C16").getPortName(); // C16 is the right motor
+        String leftMotorPort = this.robotConfiguration.getConfigurationComponent("C17").getPortName(); // C17 is the left motor
+        // for the right motor (C16) 0 is forwards and 180 is backwards
+        // for the left  motor (C17) 180 is forwards and 0 is backwards
+        switch ( motionKitDualSetAction.getDirectionRight() ) {
+            case SC.FOREWARD:
+                this.sb.append("_uBit.io.").append(rightMotorPort).append(".setServoValue(0);");
+                break;
+            case SC.BACKWARD:
+                this.sb.append("_uBit.io.").append(rightMotorPort).append(".setServoValue(180);");
+                break;
+            case SC.OFF:
+                this.sb.append("_uBit.io.").append(rightMotorPort).append(".setAnalogValue(0);");
+                break;
+            default:
+                throw new DbcException("Invalid direction!");
+        }
+        nlIndent();
+        switch ( motionKitDualSetAction.getDirectionLeft() ) {
+            case SC.FOREWARD:
+                this.sb.append("_uBit.io.").append(leftMotorPort).append(".setServoValue(180);");
+                break;
+            case SC.BACKWARD:
+                this.sb.append("_uBit.io.").append(leftMotorPort).append(".setServoValue(0);");
+                break;
+            case SC.OFF:
+                this.sb.append("_uBit.io.").append(leftMotorPort).append(".setAnalogValue(0);");
+                break;
+            default:
+                throw new DbcException("Invalid direction!");
         }
         return null;
     }

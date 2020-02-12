@@ -180,20 +180,20 @@ public class PerformanceUserIT {
             "{'cmd':'createUser';'accountName':'pid-acc-" + userNumber + "';'userName':'pid-user-" + userNumber + "';'password':'dip-" + userNumber + //
                 "';'isYoungerThen14':0;'userEmail':'cavy-" + userNumber + "@home';'role':'STUDENT'}";
         request = mkCmd(iTkn, requestString);
-        Response response = this.restUser.command(newDbSession(), request);
+        Response response = this.restUser.createUser(newDbSession(), request);
         JSONUtilForServer.assertEntityRc(response, "ok", Key.USER_CREATE_SUCCESS);
 
         // login with user "pid-*" and create 2 programs
 
         thinkTimeInMillisec += think(random, 1, 4);
         request = mkCmd(iTkn, "{'cmd':'login';'accountName':'pid-acc-" + userNumber + "';'password':'dip-" + userNumber + "'}");
-        response = this.restUser.command(newDbSession(), request);
+        response = this.restUser.login(newDbSession(), request);
         JSONUtilForServer.assertEntityRc(response, "ok", Key.USER_GET_ONE_SUCCESS);
         Assert.assertTrue(s.isUserLoggedIn());
         int sId = s.getUserId();
-        response = this.restProject.updateProject(newDbSession(), mkCmd(iTkn, "{'cmd':'saveAsP';'programName':'p1';'programText':'<program>...</program>'}"));
+        response = this.restProject.saveProgram(newDbSession(), mkCmd(iTkn, "{'cmd':'saveAsP';'programName':'p1';'programText':'<program>...</program>'}"));
         JSONUtilForServer.assertEntityRc(response, "ok", Key.PROGRAM_SAVE_SUCCESS);
-        response = this.restProject.updateProject(newDbSession(), mkCmd(iTkn, "{'cmd':'saveAsP';'programName':'p2';'programText':'<program>...</program>'}"));
+        response = this.restProject.saveProgram(newDbSession(), mkCmd(iTkn, "{'cmd':'saveAsP';'programName':'p2';'programText':'<program>...</program>'}"));
         JSONUtilForServer.assertEntityRc(response, "ok", Key.PROGRAM_SAVE_SUCCESS);
         Assert.assertEquals(2, this.memoryDbSetup.getOneBigIntegerAsLong("select count(*) from PROGRAM where OWNER_ID = " + sId));
 
@@ -203,10 +203,10 @@ public class PerformanceUserIT {
         Timestamp lastChanged = this.memoryDbSetup.getOne("select LAST_CHANGED from PROGRAM where OWNER_ID = " + sId + " and name = 'p2'");
         request = mkCmd(iTkn, "{'cmd':'save';'programName':'p2'}");
         request.getJSONObject("data").put("programText", this.theProgramOfAllUserLol).put("timestamp", lastChanged.getTime());
-        response = this.restProject.updateProject(newDbSession(), request);
+        response = this.restProject.saveProgram(newDbSession(), request);
         JSONUtilForServer.assertEntityRc(response, "ok", Key.PROGRAM_SAVE_SUCCESS);
         Assert.assertEquals(2, this.memoryDbSetup.getOneBigIntegerAsLong("select count(*) from PROGRAM where OWNER_ID = " + sId));
-        response = this.restProject.getProgramNames(newDbSession(), mkCmd(iTkn, "{'cmd':'loadPN'}"));
+        response = this.restProject.getInfosOfProgramsOfLoggedInUser(newDbSession(), mkCmd(iTkn, "{'cmd':'loadPN'}"));
         JSONUtilForServer.assertEntityRc(response, "ok", Key.PROGRAM_GET_ALL_SUCCESS);
         JSONArray programListing = ((JSONObject) response.getEntity()).getJSONArray("programNames");
         JSONArray programNames = new JSONArray();
