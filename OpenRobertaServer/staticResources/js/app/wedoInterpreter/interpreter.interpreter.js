@@ -156,12 +156,14 @@ define(["require", "exports", "interpreter.state", "interpreter.constants", "int
                             break;
                         }
                         case C.MOTOR_ON_ACTION: {
-                            var duration = s.pop();
+                            var speedOnly = stmt[C.SPEED_ONLY];
+                            var duration = speedOnly ? undefined : s.pop();
                             var speed = s.pop();
                             var name_2 = stmt[C.NAME];
                             var port = stmt[C.PORT];
                             var durationType = stmt[C.MOTOR_DURATION];
                             if (durationType === C.DEGREE || durationType === C.DISTANCE || durationType === C.ROTATIONS) {
+                                // if durationType is defined, then duration must be defined, too. Thus, it is never 'undefined' :-)
                                 var rotationPerSecond = C.MAX_ROTATION * Math.abs(speed) / 100.0;
                                 duration = duration / rotationPerSecond * 1000;
                                 if (durationType === C.DEGREE) {
@@ -169,10 +171,11 @@ define(["require", "exports", "interpreter.state", "interpreter.constants", "int
                                 }
                             }
                             n.motorOnAction(name_2, port, duration, speed);
-                            return duration;
+                            return duration ? duration : 0;
                         }
                         case C.DRIVE_ACTION: {
-                            var distance = s.pop();
+                            var speedOnly = stmt[C.SPEED_ONLY];
+                            var distance = speedOnly ? undefined : s.pop();
                             var speed = s.pop();
                             var name_3 = stmt[C.NAME];
                             var direction = stmt[C.DRIVE_DIRECTION];
@@ -180,7 +183,8 @@ define(["require", "exports", "interpreter.state", "interpreter.constants", "int
                             return duration;
                         }
                         case C.TURN_ACTION: {
-                            var angle = s.pop();
+                            var speedOnly = stmt[C.SPEED_ONLY];
+                            var angle = speedOnly ? undefined : s.pop();
                             var speed = s.pop();
                             var name_4 = stmt[C.NAME];
                             var direction = stmt[C.TURN_DIRECTION];
@@ -188,7 +192,8 @@ define(["require", "exports", "interpreter.state", "interpreter.constants", "int
                             return duration;
                         }
                         case C.CURVE_ACTION: {
-                            var distance = s.pop();
+                            var speedOnly = stmt[C.SPEED_ONLY];
+                            var distance = speedOnly ? undefined : s.pop();
                             var speedR = s.pop();
                             var speedL = s.pop();
                             var name_5 = stmt[C.NAME];

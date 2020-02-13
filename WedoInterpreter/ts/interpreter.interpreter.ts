@@ -168,12 +168,14 @@ export class Interpreter {
                         break;
                     }
                     case C.MOTOR_ON_ACTION: {
-                        let duration = s.pop();
+                        const speedOnly = stmt[C.SPEED_ONLY];
+                        let duration = speedOnly ? undefined : s.pop();
                         const speed = s.pop();
                         const name = stmt[C.NAME];
                         const port = stmt[C.PORT];
                         const durationType = stmt[C.MOTOR_DURATION];
                         if ( durationType === C.DEGREE || durationType === C.DISTANCE || durationType === C.ROTATIONS ) {
+                            // if durationType is defined, then duration must be defined, too. Thus, it is never 'undefined' :-)
                             let rotationPerSecond = C.MAX_ROTATION * Math.abs( speed ) / 100.0;
                             duration = duration / rotationPerSecond * 1000;
                             if ( durationType === C.DEGREE ) {
@@ -181,10 +183,11 @@ export class Interpreter {
                             }
                         }
                         n.motorOnAction( name, port, duration, speed );
-                        return duration;
+                        return duration ? duration : 0;
                     }
                     case C.DRIVE_ACTION: {
-                        const distance = s.pop();
+                        const speedOnly = stmt[C.SPEED_ONLY];
+                        const distance = speedOnly ? undefined : s.pop();
                         const speed = s.pop();
                         const name = stmt[C.NAME];
                         const direction = stmt[C.DRIVE_DIRECTION];
@@ -192,7 +195,8 @@ export class Interpreter {
                         return duration;
                     }
                     case C.TURN_ACTION: {
-                        const angle = s.pop();
+                        const speedOnly = stmt[C.SPEED_ONLY];
+                        const angle = speedOnly ? undefined : s.pop();
                         const speed = s.pop();
                         const name = stmt[C.NAME];
                         const direction = stmt[C.TURN_DIRECTION];
@@ -200,7 +204,8 @@ export class Interpreter {
                         return duration;
                     }
                     case C.CURVE_ACTION: {
-                        const distance = s.pop();
+                        const speedOnly = stmt[C.SPEED_ONLY];
+                        const distance = speedOnly ? undefined : s.pop();
                         const speedR = s.pop();
                         const speedL = s.pop();
                         const name = stmt[C.NAME];
